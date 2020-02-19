@@ -1,0 +1,141 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Programowanie w asemblerze</title>
+<style>
+code {color: blue}
+</style>
+</head>
+
+<body>
+<h2 align=center>Zadanie 1: symulacja rozchodzenia się ciepła</h2>
+
+<p>Naszym celem będzie napisanie funkcji symulujących fikcyjny przepływ
+pewnej wartości pseudofizycznej (o wartościach z dziedziny liczb 
+rzeczywistych) przez prostokątną siatkę.  Dla ułatwienia nazwijmy tę
+wartość ciepłem.  Nasza symulacja będzie oczywiście bardzo uproszczona,
+ale przypominająca tzw. metody elementów skończonych.
+
+<p>Dana jest prostokątna siatka w postaci tablicy dwuwymiarowej
+(oczywiście program może na swoje potrzeby trzymać to w innej postaci,
+ale mówimy o zewnętrznej, ,,logicznej'' reprezentacji).  W każdej
+komórce przechowujemy bieżącą wartość temperatury w tej okolicy.
+
+<p>W niektórych miejscach siatki znajdują się grzejniki -- źródła ciepła
+o ustalonej na czas symulacji temperaturze.  Natomiast na zewnątrz
+prostokąta są miejsca ucieczki ciepła -- również o ustalonej, ale dużo
+niższej temperaturze.  Nazwijmy je chłodnicami.
+
+<p>Symulacja odbywać się będzie krokowo.  W każdym kroku komórka siatki
+oddaje ciepło tym sąsiadom, którzy mają niższą temperaturę niż ona.
+Utrata jest proporcjonalna do różnicy temperatur.  Równocześnie komórka
+pobiera ciepło od tych sąsiadów, którzy mają wyższą temperaturę.
+
+<p>Mówiąc po prostu, zmiana wartości temperatury komórki jest proporcjonalna
+do sumy różnic temperatur z jej sąsiadami.  Wielkość zmiany określa
+współczynnik proporcjonalności, jednakowy dla wszystkich komórek (czyli
+zakładamy jednakowe przewodnictwo cieplne wszystkich komórek).
+Niech <code>moja</code> oznacza aktualna temperaturę komórki,
+zaś <code>sąsiad<sub>i</sub></code> temperatury jej sąsiadów, wtedy
+<pre>
+<code>  różnica := for i from 1 to 4 sum (sąsiad<sub>i</sub> - moja);
+  nowa-moja := moja + (różnica * współczynnik);
+</code></pre>
+  
+<p>Dla komórek wewnętrznych za sąsiednie uznajemy 2 komórki po lewej
+i prawej stronie oraz 2 komórki powyżej i poniżej.  Zewnętrzne komórki 
+brzegowe (chłodnice) nie zmieniają temperatury (choć dostarczają ciepło
+lub je ,,kradną'').  Na rysunku poniżej pokazano sąsiadów komórki oznaczonej 
+gwiazdką.
+
+<p><center><table border=1 width=30%>
+<tbody align=center>
+<tr><td></td><td>c<td>c<td>c<td>c<td>c<td>...<td></td>
+<tr><td>c<td>&nbsp&nbsp<td>&nbsp&nbsp<td>&nbsp;&nbsp;<td>&nbsp;&nbsp;<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>g<td>&nbsp;&nbsp;<td>&nbsp;&nbsp;<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>&nbsp&nbsp<td>S<td>&nbsp&nbsp<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>S<td>*<td>S<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>&nbsp&nbsp<td>S<td>&nbsp;&nbsp;<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>&nbsp&nbsp<td>&nbsp;&nbsp;<td>&nbsp;&nbsp;<td>&nbsp&nbsp<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>g<td>&nbsp<td>&nbsp&nbsp<td>g<td>...<td>c
+<tr><td>c<td>&nbsp&nbsp<td>&nbsp&nbsp<td>&nbsp;&nbsp;<td>&nbsp;&nbsp;<td>&nbsp&nbsp<td>...<td>c
+<tr><td>...<td>...<td>...<td>...<td>...<td>...<td>...<td>...
+<tr>
+<tr><td></td><td>c<td>c<td>c<td>c<td>c<td>...<td></td>
+</tbody></table></center>
+
+<p>Każdy krok to równoczesne policzenie przyrostów dla każdej komórki.
+Po obliczeniu przyrostów dla wszystkich komórek są one do nich dodawane
+i rozpoczynamy kolejny krok. 
+
+<p>Część napisana w języku wewnętrznym powinna eksportować procedury
+wołane z C:
+<ul>
+<li><p><code>void start (int szer, int wys, float *M, float C,
+                         float waga)</code>
+    
+    <p>Przygotowuje symulację, np. inicjuje pomocnicze struktury.
+    Argumentami są: rozmiary matrycy, początkowa zawartość matrycy
+    (temperatury komórek), temperatura chłodnic oraz wspólczynnik
+    proporcjonalności.
+<li><p><code>void place (int ile, int x[], int y[], float temp[])</code>
+
+    <p>Umieszcza grzejniki w podanych miejscach i ustala ich temperatury.
+<li><p><code>void step ()</code>
+
+    <p>Przeprowadza pojedynczy krok symulacji.  Po jej wykonaniu 
+    macierz <code>M</code> (przekazana przez 
+    parametr procedury <code>start</code>) zawiera nowy stan.
+</ul>
+
+<p>Uwaga: parametr M jest deklarowany jako float* ze względów ,,poglądowych'',
+nie jest wymagane przekazanie tablicy float'ów.  Można mieć dowolną
+reprezentację macierzy i użyć cast'a do przekazania jej adresu 
+asemblerowi (on i tak nie zna typów).  Być może elegantsze byłoby tu void*.
+
+<p>W procedurach w asemblerze nie należy używać instrukcji SSE (przyjdzie na
+  to czas w kolejnym zadaniu).  Nie dotyczy to instrukcji MOV... do przesłania
+  argumentu z rejestru XMMi w inne miejsce.
+
+<p>Dokładna postać wewnętrzna matrycy M nie jest
+określona (np. mogą to być dwie macierze), powinno być jednak możliwe jej 
+łatwe zainicjowanie w programie w C przez wczytanie początkowej zawartości
+z pliku.
+
+<p>Testowy program główny napisany w C powinien zainicjować matrycę M
+oraz grzejniki G i chłodnice C (przez wczytanie ich zawartości z pliku).
+Nazwę pliku, współczynnik proporcjonalności i liczbę kroków symulacji
+podajemy jako argumenty wywołania programu z linii poleceń.
+
+<p>Po (prawie) każdym wywołaniu procedury <code>step()</code>
+powinno się wyświetlać aktualną sytuację, np. tekstowo, jako
+macierz liczb, po czym czekać na naciśnięcie &lt;Enter&gt;.
+
+<p>Postać danych na pliku
+<hr>
+<pre>
+szerokość wysokość wartość-temperatury-dla-chłodnic
+pierwszy wiersz M
+....
+ostatni wiersz M
+liczba-grzejników
+x, y i temp dla pierwszego grzejnika
+....
+x, y i temp dla ostatniego grzejnika
+</pre>
+<hr>
+
+<p>Mile widziany prosty plik testowy z danymi.
+
+<p>Rozwiązania nie zawierające pliku <code>Makefile</code> nie będą
+sprawdzane.
+
+<p>Rozwiązania (procedury w asemblerze i program w C z przykładowymi 
+testami) należy wysłać do dnia 30 listopada (23:59) pocztą na 
+<tt>zbyszek@mimuw.edu.pl</tt> jako <font color=red>pojedynczy 
+załącznik</font> -- archiwum o nazwie wskazującej na autora (np.
+<code>ab123456-zad2.tgz</code>), spakowane z osobnego katalogu o tej samej
+nazwie (ale bez .tgz).  Program ma działać w środowisku zainstalowanym 
+w laboratoriach w trybie 64-bitowym.
+</body>
+</html>

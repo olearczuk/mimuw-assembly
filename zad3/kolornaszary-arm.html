@@ -1,0 +1,56 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Programowanie w asemblerze</title>
+</head>
+
+<body>
+<h2 align=center>Zadanie 3: zamiana koloru na skalę szarości</h2>
+
+<p>Dany jest obrazek w postaci matrycy pikseli.  Kolor każdego piksela
+zapisany jest na 24 bitach, po 8 bitów dla każdego koloru (RGB).
+Należy napisać procedurę w asemblerze procesora ARM, dokonującą
+konwersji obrazu na skalę szarości przez policzenie średniej ważonej.
+
+<p>Ponieważ oko ludzkie niejednakowo reaguje na kolory (najsilniej na
+zielony), współczynniki dla poszczególnych składowych nie mogą być
+jednakowe, zwykle przyjmuje się:
+<ul>
+<li>77 dla koloru czerwonego,
+<li>151 dla koloru zielonego i
+<li>28 dla koloru niebieskiego.
+</ul>
+Podane współczynniki sumują się do 256, co ułatwi dzielenie.
+
+<p>Argumentami procedury powinny być:
+<ul>
+<li>adres matrycy: zapis zapewne wierszami, trzeba będzie wybrać sobie
+odpowiedni format podczas konwersji z formatu graficznego;
+<li>rozmiary matrycy: liczba wierszy i kolumn.
+</ul>
+
+<p>Należy umożliwić zmienianie wartości współczynników przez podanie
+  opcjonalnych parametrów programu głównego (kolejność standardowa R, G, B),
+  ale wtedy muszą się one sumować do 256.
+
+<p>Dodatkowo należy napisać program główny (w C), który
+pobierze (jako wymagany argument) nazwę pliku graficznego (w formacie PPM,
+przypominam o 
+<a href="http://en.wikipedia.org/wiki/Netpbm_format">Cioci Wikipedii</a>)
+i zamieni go na odpowiednią matrycę (można funkcją z jakiejś biblioteki,
+byleby nie zawierała błędów ;-), po czym wywoła naszą procedurę.  
+Otrzymaną matrycę należy z powrotem zamienić na plik graficzny 
+(z rozszerzeniem .pgm!).  Całość powinna działać pod emulatorem QEMU 
+dostępnym na stronie.
+
+<p>W katalogu <a href="../image">image</a> znajduje się kilka prostych plików
+z danymi.
+ 
+<p>Rozwiązania (programy i przykładowe testy) należy wysyłać do dnia 27 
+stycznia (23:59) pocztą na <tt>zbyszek@mimuw.edu.pl</tt> jako
+<font color=red> pojedynczy załącznik</font> -- archiwum o nazwie wskazującej 
+na autora (np. <code>ab123456-zad3.tgz</code>), spakowane z osobnego katalogu 
+<strong>o tej samej nazwie</strong> (ale bez tgz).  Program ma działać 
+w środowisku zainstalowanym w laboratoriach.
+</body>
+</html>
